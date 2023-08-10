@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import Stats from 'three/addons/libs/stats.module.js';
 
 if (WebGL.isWebGLAvailable()) {
 
@@ -20,7 +22,7 @@ if (WebGL.isWebGLAvailable()) {
 
     const objectGeometry = new THREE.BoxGeometry(1, 1, 1);
     const objectMaterial = new THREE.MeshStandardMaterial({ color: 0x049ef4 });
-    const object = new THREE.Mesh(objectGeometry, objectMaterial);
+    var object = new THREE.Mesh(objectGeometry, objectMaterial);
     const objectEdgesGeometry = new THREE.EdgesGeometry(object.geometry)
     const objectEdgesMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
     const objectEdges = new THREE.LineSegments(objectEdgesGeometry, objectEdgesMaterial);
@@ -42,6 +44,19 @@ if (WebGL.isWebGLAvailable()) {
         RIGHT: null
     };
     controls.update();
+
+    var params = {
+        upload: function() { 
+            document.getElementById('fileUpload').click();
+    }
+    };
+
+    const gui = new GUI();
+    gui.add(params, 'upload').name('Upload');
+
+    var stats = new Stats();
+	document.body.appendChild( stats.dom );
+
 
     // function onMouseWheelScroll(e) {
 
@@ -78,6 +93,19 @@ if (WebGL.isWebGLAvailable()) {
 
     window.addEventListener('resize', onWindowResize, false);
 
+    const gltfLoader = new GLTFLoader();
+
+    const uploadButton = document.getElementById('fileUpload');
+    uploadButton.onchange = () => {
+        var file = uploadButton.files[0];
+        scene.remove(object);
+        gltfLoader.load(URL.createObjectURL(file), function(gltf){
+            object = gltf.scene;
+            scene.add(object);
+        });
+        
+    }
+
     function onWindowResize() {
 
         camera.aspect = window.innerWidth / window.innerHeight;
@@ -91,6 +119,7 @@ if (WebGL.isWebGLAvailable()) {
         requestAnimationFrame(animate);
         console.log("Camera: " + "X: " + camera.position.x + "; Y: " + camera.position.y + "; Z: " + camera.position.z);
         controls.update();
+        stats.update();
 
         renderer.render(scene, camera);
     }
